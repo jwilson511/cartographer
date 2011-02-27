@@ -67,4 +67,15 @@ describe Cartographer::Gmap do
     map.marker_clusterer.should equal(true)
   end
 
+  it "should allow a dragend callback do be specified on initialization" do
+    map = Cartographer::Gmap.new('map', {:dragend_callback => '/controller/action'})
+    map.to_s.should include("cartographer_ajax_fetch_url('/controller/action?lat=' + map.getCenter().lat() + '&lng=' + map.getCenter().lng());")
+  end
+
+  it "should allow a dragend callback do be specified after initialization" do
+    map = Cartographer::Gmap.new('map')
+    map.dragend_callback = '/controller/action'
+    map.to_s.should include("cartographer_ajax_fetch_url('/controller/action?lat=' + map.getCenter().lat() + '&lng=' + map.getCenter().lng());")
+  end
+
 end

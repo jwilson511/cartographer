@@ -27,7 +27,7 @@ class Cartographer::Gmap
   
   attr_accessor :dom_id, :draggable, :polylines,:type, :controls,
   :markers, :ad, :center, :zoom, :scroll, :icons, :debug, :marker_mgr, :current_marker, :marker_clusterer, :shared_info_window, :marker_clusterer_icons,
-  :type
+  :type, :dragend_callback
   
   @@window_onload = ""
   
@@ -70,6 +70,8 @@ class Cartographer::Gmap
     
     @shared_info_window = opts[:shared_info_window] || Cartographer::InfoWindow.new(:name => "default_shared_info_window",:content => '')
     @marker_clusterer_icons = opts[:marker_clusterer_icons] || []
+
+    @dragend_callback = opts[:dragend_callback]
     
     yield self if block_given?
   end
@@ -142,6 +144,12 @@ class Cartographer::Gmap
     html << "  // create polylines from the @polylines array" if @debug
     @polylines.each { |pl| html << pl.to_js }
     
+    # Add dragend callback 
+    unless @dragend_callback.nil?
+      html << "google.maps.event.addListener(#{@dom_id}, \"dragend\", function() {"
+      html << "  cartographer_ajax_fetch_url('#{@dragend_callback}?lat=' + map.getCenter().lat() + '&lng=' + map.getCenter().lng());"
+      html << "});\n"
+    end
     
     # ending the gmap_#{name} function
     html << "}\n"
@@ -217,7 +225,7 @@ class Cartographer::Gmap
       google.maps.event.addListener(map, \"zoomend\", function(oldzoom,zoom) {
       google.maps.log.write('Current Zoom:' + zoom);
     });" if @debug
-    
+
     html << "}" #End of setup marker method
         
     html << "  // Dynamically attach to the window.onload event while still allowing for your existing onload events." if @debug
